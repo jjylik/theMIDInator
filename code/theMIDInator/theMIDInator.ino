@@ -13,15 +13,9 @@
 
 // COMPONENT LIST
 
-// 1x   Arduino MEGA 2560
-// 3x   10kOhm (B10K) linear rotary potentiometer
-// 1x   10kOhm (B10K) linear slide potentiometer
-// 1x   ALPS 6 position rotary switch (SRBM160700)
-// 2x   ALPHA 12 step rotary encoder (RE130F-41-175F-12P)
-// 1x   phone keypad from old Ericsson Diavox
-// 2x   generic slide toggle switches
-// 1x   generic (ON)-OFF-(ON) toggle switch
-// 1x   remote control joystick (2 potentiometers)
+// 1x   Arduino Bluno MEGA 2560
+// 16x  10kOhm (B10K) linear rotary potentiometer
+// 4x   APS EC12 rotary encoder 24 step encoder
 
 // The libraries used in this sketch can be found at:
 
@@ -36,119 +30,80 @@
 // https://www.gnu.org/licenses/gpl-3.0.en.html
 
 
-// KEYPAD //
-
-#include <Keypad.h>
-
-const byte ROWS = 4; // four rows
-const byte COLS = 3; // three columns
-char keys[ROWS][COLS] = {  // keypad keys, 1-9, 0, S for star (asterisk) and P for pound (square)
-  {'1', '2', '3'},
-  {'4', '5', '6'},
-  {'7', '8', '9'},
-  {'S', '0', 'P'}
-};
-
-byte rowPins[ROWS] = {43, 41, 39, 35}; // keypad row pinouts
-byte colPins[COLS] = {33, 31, 37}; // keypad column pinouts
-
-Keypad kpd = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );
-
-int midC = 60; // MIDI note value for middle C on a standard keyboard
-
-const int transposePin1 = 22; // pins for the switch controlling transposing
-const int transposePin2 = 23;
-int transpose = 0;  // if = 0 no transposing
-int transposeLeft = 0;
-int transposeRight = 0;
-int oldTransposeLeft = 0;
-int oldTransposeRight = 0;
-unsigned long transposeTimer = 0;  // for debouncing
-
-
-// ROTARY ENCODER //
-
 #define ENCODER_DO_NOT_USE_INTERRUPTS
 #include <Encoder.h>
 
-Encoder myEnc1(26, 27);
-Encoder myEnc2(24, 25);
+Encoder myEnc1(25, 24);
+Encoder myEnc2(31, 30);
+Encoder myEnc3(47, 46);
+Encoder myEnc4(53, 52);
 long position1  = -999;
 long position2  = -999;
-int encVals[12] = {64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64}; // set initial value of encoder to mid range of 0-127
-
-
-// ROTARY SWITCH //
-
-const int rotSwitch1 = 30;  // rotary switch pins
-const int rotSwitch2 = 32;
-const int rotSwitch3 = 34;
-const int rotSwitch4 = 36;
-const int rotSwitch5 = 38;
-const int rotSwitch6 = 40;
-int cVal = 1;
-
+long position3  = -999;
+long position4  = -999;
+int encVals[4] = {64, 64, 64, 64}; // set initial value of encoder to mid range of 0-127
 
 // POTENTIOMETERS //
-
-const int pot1 = A0;  // potentiometer pins
+// Discrete variables for easier wiring issue troubleshooting
+const int pot1 = A0;
 const int pot2 = A1;
 const int pot3 = A2;
-const int slidePot = A3;
+const int pot4 = A3;
+const int pot5 = A4;
+const int pot6 = A5;
+const int pot7 = A6;
+const int pot8 = A7;
+const int pot9 = A8;
+const int pot10 = A9;
+const int pot11 = A10;
+const int pot12 = A11;
+const int pot13 = A12;
+const int pot14 = A13;
+const int pot15 = A14;
+const int pot16 = A15;
 
 int potVal1 = 0;
 int potVal2 = 0;
 int potVal3 = 0;
-int slidePotVal = 0;
+int potVal4 = 0;
+int potVal5 = 0;
+int potVal6 = 0;
+int potVal7 = 0;
+int potVal8 = 0;
+int potVal9 = 0;
+int potVal10 = 0;
+int potVal11= 0;
+int potVal12 = 0;
+int potVal13 = 0;
+int potVal14 = 0;
+int potVal15 = 0;
+int potVal16 = 0;
 
 int lastPotVal1 = 0;
 int lastPotVal2 = 0;
 int lastPotVal3 = 0;
-int lastSlidePotVal = 0;
+int lastPotVal4 = 0;
+int lastPotVal5 = 0;
+int lastPotVal6 = 0;
+int lastPotVal7 = 0;
+int lastPotVal8 = 0;
+int lastPotVal9 = 0;
+int lastPotVal10 = 0;
+int lastPotVal11 = 0;
+int lastPotVal12 = 0;
+int lastPotVal13 = 0;
+int lastPotVal14 = 0;
+int lastPotVal15 = 0;
+int lastPotVal16 = 0;
 
-
-// JOYSTICK //
-
-const int joyX = A5;  // joystick pins
-const int joyY = A4;
-
-const int Xswitch = 52;  // axis switche pins
-const int Yswitch = 50;
-
-int joyXval = 0;
-int joyYval = 0;
-int lastJoyXval = 0;
-int lastJoyYval = 0;
-
+int channel = 176;
 
 void setup() {
-
-  Serial.begin(9600); // enable serial communication
-
-  pinMode(transposePin1, INPUT_PULLUP);  // activate the input pullup resistor on all buttons/switches
-  pinMode(transposePin2, INPUT_PULLUP);  // means you won't need external resistors to read the buttons
-  pinMode(rotSwitch1, INPUT_PULLUP);
-  pinMode(rotSwitch2, INPUT_PULLUP);
-  pinMode(rotSwitch3, INPUT_PULLUP);
-  pinMode(rotSwitch4, INPUT_PULLUP);
-  pinMode(rotSwitch5, INPUT_PULLUP);
-  pinMode(rotSwitch6, INPUT_PULLUP);
-  pinMode(Xswitch, INPUT_PULLUP);
-  pinMode(Yswitch, INPUT_PULLUP);
-
+  Serial.begin(115200);
 }
 
 
 void loop() {
-
-  readRotSwitch();    // read roatary switch
   readEncoder();      // read roraty encoder
-  readKeyPad();       // read keypad + transpose switch
   readPots();         // read potentiometers
-  readJoystick();     // read joystick + on/off switches
-
 }
-
-
-
-

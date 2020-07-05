@@ -6,3 +6,5 @@ A video detailing the build of this MIDI controller can be found here:
 https://youtu.be/JZ5yPdoPooU
 
 [![Watch the video](https://img.youtube.com/vi/JZ5yPdoPooU/hqdefault.jpg)](https://youtu.be/JZ5yPdoPooU)
+
+### Note! that this fork is not compatible with the original design. The schematics are not compatible with the code. Read [my](http://koodihommia.blogspot.com/2020/07/bluetooth-midinator.html) blogpost for building instructions. 
